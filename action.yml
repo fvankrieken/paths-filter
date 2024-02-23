@@ -44,6 +44,11 @@ inputs:
       This option takes effect only when changes are detected using git against different base branch.
     required: false
     default: '100'
+  treat-pr-as-push:
+    description: |
+      Treats pull request triggers as push
+      Allows setting of `ref` or `base` variable to allow comparison to branches other than pr target
+    required: false
 outputs:
   changes:
     description: JSON array with names of all filters matching any of changed files
