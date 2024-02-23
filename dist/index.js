@@ -555,7 +555,7 @@ function getConfigFileContent(configPath) {
     return fs.readFileSync(configPath, { encoding: 'utf8' });
 }
 async function getChangedFiles(token, base, ref, initialFetchDepth) {
-    var _a, _b;
+    var _a, _b, _c;
     // if base is 'HEAD' only local uncommitted changes will be detected
     // This is the simplest case as we don't need to fetch more commits or evaluate current/before refs
     if (base === git.HEAD) {
@@ -565,6 +565,7 @@ async function getChangedFiles(token, base, ref, initialFetchDepth) {
         return await git.getChangesOnHead();
     }
     const prEvents = ['pull_request', 'pull_request_review', 'pull_request_review_comment', 'pull_request_target'];
+    const treatPrAsPush = core.getInput('treat-pr-as-push', { required: false });
     if (prEvents.includes(github.context.eventName)) {
         if (ref) {
             core.warning(`'ref' input parameter is ignored when 'base' is set to HEAD`);
@@ -573,7 +574,7 @@ async function getChangedFiles(token, base, ref, initialFetchDepth) {
             core.warning(`'base' input parameter is ignored when action is triggered by pull request event`);
         }
         const pr = github.context.payload.pull_request;
-        if (token) {
+        if (token && !treatPrAsPush) {
             return await getChangedFilesFromApi(token, pr);
         }
         if (github.context.eventName === 'pull_request_target') {
@@ -583,8 +584,14 @@ async function getChangedFiles(token, base, ref, initialFetchDepth) {
             throw new Error(`'token' input parameter is required if action is triggered by 'pull_request_target' event`);
         }
         core.info('Github token is not available - changes will be detected using git diff');
-        const baseSha = (_a = github.context.payload.pull_request) === null || _a === void 0 ? void 0 : _a.base.sha;
-        const defaultBranch = (_b = github.context.payload.repository) === null || _b === void 0 ? void 0 : _b.default_branch;
+        let baseSha;
+        if (treatPrAsPush) {
+            baseSha = (_a = github.context.payload) === null || _a === void 0 ? void 0 : _a.before;
+        }
+        else {
+            baseSha = (_b = github.context.payload.pull_request) === null || _b === void 0 ? void 0 : _b.base.sha;
+        }
+        const defaultBranch = (_c = github.context.payload.repository) === null || _c === void 0 ? void 0 : _c.default_branch;
         const currentRef = await git.getCurrentRef();
         return await git.getChanges(base || baseSha || defaultBranch, currentRef);
     }

@@ -69,6 +69,7 @@ async function getChangedFiles(token: string, base: string, ref: string, initial
   }
 
   const prEvents = ['pull_request', 'pull_request_review', 'pull_request_review_comment', 'pull_request_target']
+  const treatPrAsPush = core.getInput('treat-pr-as-push', {required: false})
   if (prEvents.includes(github.context.eventName)) {
     if (ref) {
       core.warning(`'ref' input parameter is ignored when 'base' is set to HEAD`)
@@ -77,7 +78,7 @@ async function getChangedFiles(token: string, base: string, ref: string, initial
       core.warning(`'base' input parameter is ignored when action is triggered by pull request event`)
     }
     const pr = github.context.payload.pull_request as PullRequestEvent
-    if (token) {
+    if (token && !treatPrAsPush) {
       return await getChangedFilesFromApi(token, pr)
     }
     if (github.context.eventName === 'pull_request_target') {
@@ -87,7 +88,12 @@ async function getChangedFiles(token: string, base: string, ref: string, initial
       throw new Error(`'token' input parameter is required if action is triggered by 'pull_request_target' event`)
     }
     core.info('Github token is not available - changes will be detected using git diff')
-    const baseSha = github.context.payload.pull_request?.base.sha
+    let baseSha
+    if (treatPrAsPush) {
+      baseSha = github.context.payload?.before
+    } else {
+      baseSha = github.context.payload.pull_request?.base.sha
+    }
     const defaultBranch = github.context.payload.repository?.default_branch
     const currentRef = await git.getCurrentRef()
     return await git.getChanges(base || baseSha || defaultBranch, currentRef)
