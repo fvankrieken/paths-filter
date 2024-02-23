@@ -69,7 +69,7 @@ async function getChangedFiles(token: string, base: string, ref: string, initial
   }
 
   const prEvents = ['pull_request', 'pull_request_review', 'pull_request_review_comment', 'pull_request_target']
-  const treatPrAsPush = core.getInput('treat_pr_as_push', {required: false})
+  const treatPrAsPush = core.getInput('treat-pr-as-push', {required: false})
   if (!(treatPrAsPush) && prEvents.includes(github.context.eventName)) {
     if (ref) {
       core.warning(`'ref' input parameter is ignored when 'base' is set to HEAD`)
