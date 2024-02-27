@@ -535,6 +535,7 @@ async function run() {
         const filter = new filter_1.Filter(filtersYaml);
         const files = await getChangedFiles(token, base, ref, initialFetchDepth);
         core.info(`Detected ${files.length} changed files`);
+        core.info(`Files changed: ${files}`);
         const results = filter.match(files);
         exportResults(results, listFiles);
     }
@@ -593,6 +594,7 @@ async function getChangedFiles(token, base, ref, initialFetchDepth) {
         }
         const defaultBranch = (_c = github.context.payload.repository) === null || _c === void 0 ? void 0 : _c.default_branch;
         const currentRef = await git.getCurrentRef();
+        core.info(`Comparing to ref ${base || baseSha || defaultBranch}`);
         return await git.getChanges(base || baseSha || defaultBranch, currentRef);
     }
     else {
