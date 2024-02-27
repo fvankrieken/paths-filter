@@ -34,8 +34,10 @@ async function run(): Promise<void> {
 
     const filter = new Filter(filtersYaml)
     const files = await getChangedFiles(token, base, ref, initialFetchDepth)
-    core.info(`Detected ${files.length} changed files`)
-    core.info(`Files changed: ${files}`)
+    core.info(`Detected ${files.length} changed files:`)
+    for (let i = 0; i < files.length; i++) {
+      core.info(files[i].filename)
+    }
     const results = filter.match(files)
     exportResults(results, listFiles)
   } catch (error) {
